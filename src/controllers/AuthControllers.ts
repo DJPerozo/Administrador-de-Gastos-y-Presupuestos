@@ -4,6 +4,7 @@ import User from '../models/User';
 import { comparePassword, hashPassword } from '../helpers/authbcrypt';
 import { generateToken } from '../helpers/authToken';
 import { generateJWT } from '../helpers/authJWT';
+import EmailAuth from '../email/authEmail';
 
 class AuthController{
   static createAccount = async (req: Request, res: Response):Promise<void> => {
@@ -22,6 +23,12 @@ class AuthController{
       user.password = await hashPassword(password);
       user.token = generateToken();
       await user.save();
+
+      EmailAuth.confirmationEmail({
+        name: user.name,
+        email: user.email,
+        token: user.token
+      });
 
       res.status(201).json({msg: 'Revise su email le emos mandado un codigo para que confirme su cuenta'});
       return;
@@ -111,6 +118,12 @@ class AuthController{
       user.token = generateToken();
       await user.save();
 
+      EmailAuth.resetPasswordEmail({
+        name: user.name,
+        email: user.email,
+        token: user.token
+      });
+      
       res.status(200).json({msg: 'Revisa tu Email para Intrucciones'});
       return;
 
